@@ -71,7 +71,7 @@ Docker image is based on the Ubuntu 18.04 LTS
 
 ### Wallpaper
 
-Wallpaper has download from https://steemit.com/steemit/@son-of-satire/my-1000th-post-on-steemit-free-download-steem-desktop-wallpaper?sort=new
+Wallpaper has download from [website](https://steemit.com/steemit/@son-of-satire/my-1000th-post-on-steemit-free-download-steem-desktop-wallpaper?sort=new)
 
 ## Known issues
 
@@ -90,7 +90,11 @@ Create container with flag:
 --cap-add=SYS_ADMIN
 ```
 
-Or run browsers with flag --no-sandbox.
+Or run browsers with flag 
+
+```text
+--no-sandbox
+```
 
 # Support
 
