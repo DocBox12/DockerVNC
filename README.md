@@ -20,8 +20,8 @@ After starting the container, remember to change the time zone! Default is GMT.
 
 # Passwords
 
-VNC Password: vncpassword
-docbox user password: password
+- VNC Password: vncpassword
+- docbox user password: password
 
 # Command
 
