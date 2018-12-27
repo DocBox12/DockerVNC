@@ -1,0 +1,94 @@
+# Project is forked from https://github.com/ConSol/docker-headless-vnc-container
+
+# Maintainer
+
+## Username: Pawel Pieczyrak
+## Nick: DocBox
+## GitHub: https://github.com/DocBox12/
+## Blog [polish only]: https://steemit.com/@docbox
+## Twitter: https://twitter.com/PawePieczyrak
+## Support me [english]: http://bitcoineng.morfiblog.pl/ 
+## Support me [polish]: http://bitcoin.morfiblog.pl/
+
+FROM ubuntu:18.04
+
+MAINTAINER Pawel Pieczyrak
+
+## Connection ports for controlling the UI:
+# VNC port:5901
+# noVNC webport, connect via http://IP:6901/?password=vncpassword
+ENV DISPLAY=:1 \
+    VNC_PORT=5901 \
+    NO_VNC_PORT=6901
+EXPOSE $VNC_PORT $NO_VNC_PORT
+
+### Envrionment config
+ENV HOME=/headless \
+    TERM=xterm \
+    STARTUPDIR=/dockerstartup \
+    INST_SCRIPTS=/headless/install \
+    NO_VNC_HOME=/headless/noVNC \
+    DEBIAN_FRONTEND=noninteractive \
+    VNC_COL_DEPTH=24 \
+    VNC_RESOLUTION=1280x1024 \
+    VNC_PW=vncpassword \
+    VNC_VIEW_ONLY=false
+WORKDIR $HOME
+
+### Add all install scripts for further steps
+ADD ./src/common/install/ $INST_SCRIPTS/
+ADD ./src/ubuntu/install/ $INST_SCRIPTS/
+RUN find $INST_SCRIPTS -name '*.sh' -exec chmod a+x {} +
+
+### Install some common tools
+RUN apt-get update && apt-get install -y vim wget net-tools locales bzip2 python-numpy nano mc
+
+### Change language to polish
+RUN locale-gen pl_PL.UTF-8  
+ENV LANG pl_PL.UTF-8  
+ENV LANGUAGE pl_PL:pl  
+ENV LC_ALL pl_PL.UTF-8 
+
+### Install custom fonts
+RUN apt-get update && apt-get install -y ttf-wqy-zenhei
+
+### Install xvnc-server & noVNC - HTML5 based VNC viewer
+RUN $INST_SCRIPTS/tigervnc.sh
+RUN $INST_SCRIPTS/no_vnc.sh
+
+### Install firefox
+RUN apt-get update && apt-get install -y firefox
+
+### Install pluma file editor
+RUN apt-get update && apt-get install -y pluma
+
+### Install sudo
+RUN apt-get update && apt-get install -y sudo
+
+### Create user with password and add to sudo
+RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/newuser --gecos "User" docbox
+RUN echo "docbox:password" | chpasswd
+RUN sudo adduser docbox sudo
+
+### Modify sudores file
+RUN cp -f $INST_SCRIPTS/sudores /etc/
+
+### Copy version file
+RUN cp -f $INST_SCRIPTS/version / 
+
+### Install xfce UI
+RUN $INST_SCRIPTS/xfce_ui.sh
+ADD ./src/common/xfce/ $HOME/
+
+### configure startup
+RUN $INST_SCRIPTS/libnss_wrapper.sh
+ADD ./src/common/scripts $STARTUPDIR
+RUN $INST_SCRIPTS/set_user_permission.sh $STARTUPDIR $HOME
+
+### Clean
+RUN apt-get clean -y
+
+USER 1000
+
+ENTRYPOINT ["/dockerstartup/vnc_startup.sh"]
+CMD ["--wait"]
